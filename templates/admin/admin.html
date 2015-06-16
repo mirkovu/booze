@@ -1,0 +1,123 @@
+{% extends 'admin/base.html' %}
+
+{% block body %}
+	<div class="topbar">
+		<img src="/static/admin/img/icon.png" height="30px"><span class="topbartext"> Admin Panel</span>
+	</div>
+	<div class="container">
+		<br>
+		<div class="col-xs-12">
+			<div class="panel panel-default">
+			  <div class="panel-heading">System Pages</div>
+			  <div class="panel-body">
+			  	<ul class="filelist">
+			    {%- for page in systempages -%}
+			      <li>
+			      	<a href='/admin/page/edit/{{ page.1 }}'>{{ page.0 }}</a>
+			      	{% if loop.index > 5 %}
+			      		<a href='/admin/page/delete/{{ page.1 }}'>delete</a>
+			      	{% endif %}
+			      </li>
+			    {% endfor %}
+			    </ul>
+			  </div>
+			</div>
+		</div>
+		<div class="col-xs-12">
+			<div class="panel panel-default">
+			  <div class="panel-heading form-inline">Custom Pages
+				  <input id="add" class="form-control input-sm" type="text" placeholder="new page name">
+					<button class="btn btn-default btn-sm" id="addpage">Add</button>
+				</div>
+			  <div class="panel-body">
+			  	<ul class="filelist">
+					{%- for page in pages.children recursive %}
+					    <li {% if page.children %} class="liconnect"{% endif %}>
+					    {%- if page.children -%}
+					    		{{ page.name }}
+					        <ul class="filelist">{{ loop(page.children) }}</ul>
+					    {% else %}
+					    		<a href='/admin/page/edit/pages/{{ page.path }}'>{{ page.name }}</a> <a href='/admin/page/delete/pages/{{ page.path }}'>delete</a>
+					    {%- endif %}</li>
+					{%- endfor %}
+					</ul>
+			  </div>
+			</div>
+		</div>
+		
+		<div class="col-xs-12">
+			<div class="panel panel-default">
+			  <div class="panel-heading form-inline">Static Files
+				  <input id="adds" class="form-control input-sm" type="text" placeholder="new static file name">
+					<button class="btn btn-default btn-sm" id="addstatic">Add</button>
+				</div>
+			  <div class="panel-body">
+					<ul class="filelist">
+					{%- for page in staticfiles.children recursive %}
+						    <li {% if page.children %} class="liconnect"{% endif %}>
+						    {%- if page.children -%}
+						    		{{ page.name }}
+						        <ul class="filelist">{{ loop(page.children) }}</ul>
+						    {% else %}
+						    		{% if page.name.endswith(".css") or page.name.endswith(".js") or page.name.endswith(".txt") %}
+						    			<a href='/admin/static/edit/{{ page.path }}'>{{ page.name }}</a>
+						    		{% else %}
+						    			{{ page.name }}
+						    		{% endif %}
+						    		&nbsp;<a href='/admin/static/delete/{{ page.path }}'>delete</a>
+						    {%- endif %}</li>
+						{%- endfor %}
+					</ul>
+			  </div>
+			  <div class="panel-footer">
+			  	<form action="/admin/upload" class="form-inline" method="post" enctype="multipart/form-data">
+			  		<input name="uploadpath" class="form-control input-sm" type="text" placeholder="upload path">
+			  		<input name="uploadfile" class="form-control input-sm" type="file">
+			  		<button type="submit" class="btn btn-default btn-sm" id="upload">Upload</button>
+			  	</form>
+			  </div>
+			</div>
+		</div>
+
+
+		
+	</div>
+{% endblock %}
+
+
+{% block script %}
+<script>
+	function convertToSlug(Text)
+	{
+	    return Text
+	        .toLowerCase()
+	        .replace(/[^\w\/]+/g,'')
+	        .replace(/ +/g,'_')
+	        ;
+	}
+	function stripsuffix(str, suffix) {
+    if (str.indexOf(suffix, str.length - suffix.length) !== -1){
+    	return str.slice(0, -1*suffix.length)
+    }
+    else {
+    	return str
+    }
+	}
+
+	$(function(){
+		$("#addpage").click(function(){
+			var value = convertToSlug(stripsuffix($('#add').val(), '.html'));
+			window.location.replace('/admin/page/new/'+value+'.html');
+
+		})
+		$("#addstatic").click(function(){
+			var value = $('#adds').val();
+			var suffix = "." + value.split('.')[value.split('.').length - 1];
+			value = stripsuffix(value, suffix);
+			value = convertToSlug(value);
+			window.location.replace('/admin/static/new/'+value+suffix);
+
+		})
+	})
+</script>
+{% endblock %}

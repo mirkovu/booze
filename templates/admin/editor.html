@@ -1,0 +1,139 @@
+{% extends 'admin/base.html' %}
+
+
+{% block head %}
+  <style type="text/css" media="screen">
+    body {
+        overflow: hidden;
+    }
+    #editor {
+        margin: 0;
+        position: absolute;
+        top: 60px;
+        bottom: 60px;
+        left: 0;
+        right: {% if scope == "page" %}50%{% else %}0{% endif %};
+    }
+    #header {
+    	margin: 0;
+    	position: absolute;
+    	top: 0;
+    	left: 0;
+    	right: 0;
+    	min-height: 60px;
+    	height: 60px;
+    }
+    #footer {
+    	margin: 0;
+    	position: absolute;
+    	bottom: 0;
+    	left: 0;
+    	right: 0;
+    	min-height: 60px;
+    	height: 60px;
+    	text-align: right;
+    }
+    #preview {
+    	margin: 0;
+    	position: absolute;
+    	left: 50%;
+    	right: 0;
+    	bottom: 60px;
+    	top: 60px;
+    	border: 1px solid #AAAAAA;
+    }
+    #frame {
+    	border: 0;
+      /*-ms-zoom: 0.75;
+      -moz-transform: scale(0.75);
+      -moz-transform-origin: 0 0;
+      -o-transform: scale(0.75);
+      -o-transform-origin: 0 0;
+      -webkit-transform: scale(0.75);
+      -webkit-transform-origin: 0 0;*/
+    }
+    #previewtag {
+    	margin: 0;
+    	position: relative;
+    	top:0;
+    	right:0;
+    	background-color: #EEEEEE;
+    	font-size: 70%;
+    	text-align: center;
+    }
+  </style>
+{% endblock %}
+
+{% block body %}
+<div id="header">
+	<div class="topbar">
+		<img src="/static/admin/img/icon.png" height="30px"><span class="topbartext"> Editing {{ page }}</span>
+	</div>
+	<a href="/admin">Go Back</a>
+	
+</div>
+<pre id="editor">{{ content }}</pre>
+{% if scope == "page" %}
+<div id="preview">
+	<div id="previewtag">current</div>
+	<iframe id="frame" src="/{{ page|replace('pages/', '', 1) }}"width="100%" height="100%">
+  </iframe>
+</div>
+{% endif %}
+<div id="footer">
+	<div class="btn-group" role="group" aria-label="...">
+		{% if scope == "page" %}
+			<button class="btn btn-default" id="currentbutton">View Original</button>
+			<button class="btn btn-default" id="previewbutton">Preview Changes</button>
+		{% endif %}
+		<button class="btn btn-primary" id="save">Save</button>
+	</div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+	<script src="/static/admin/js/src-min-noconflict/ace.js"></script>
+	<script>
+		// For todays date;
+		Date.prototype.today = function () { 
+		    return this.getFullYear()+"/"+(((this.getMonth()+1) < 10)?"0":"") + (this.getMonth()+1) +"/" +((this.getDate() < 10)?"0":"") + this.getDate() ;
+		}
+
+		// For the time now
+		Date.prototype.timeNow = function () {
+		     return ((this.getHours() < 10)?"0":"") + this.getHours() +":"+ ((this.getMinutes() < 10)?"0":"") + this.getMinutes() +":"+ ((this.getSeconds() < 10)?"0":"") + this.getSeconds();
+		}
+
+		// Main Function on Document Load
+		$(function(){
+			 var editor = ace.edit("editor");
+			 editor.setTheme("ace/theme/monokai");
+			 editor.getSession().setMode("ace/mode/html");
+
+			 $("#save").click(function(){
+			 	$.post('/admin/{{scope}}/edit/{{ page }}', 
+			 		     {filecontent: editor.getSession().getValue()},
+			 		     function(){
+			 		     	var datetime = "current (saved " + new Date().today() + " - " + new Date().timeNow() + ')';
+			 		     	$('#frame').attr('src', "/{{ page|replace('pages/', '', 1) }}");
+			 		     	$("#previewtag").html(datetime);
+			 		     }).fail(function(){console.log('failed')})
+			 })
+
+			 $("#previewbutton").click(function(){
+			 	$.post('/admin/page/edit/temp.html', 
+			 		     {filecontent: editor.getSession().getValue()},
+			 		     function(){
+			 		     	$("#frame").attr('src', '/preview');
+			 		     	$("#previewtag").html("preview");
+			 		     }).fail(function(){console.log('failed')})
+			 })
+			 $("#currentbutton").click(function(){
+			 		     	$('#frame').attr('src', "/{{ page|replace('pages/', '', 1) }}");
+			 		     	$("#previewtag").html("current");
+			 })
+
+		})
+	</script>
+{% endblock %}

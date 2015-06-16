@@ -1,0 +1,47 @@
+{% extends 'admin/base.html' %}
+
+{% block body %}
+<div class="container">
+	<div class="well col-xs-12 text-center">
+		<img src="/static/admin/img/logo.png" height="100px">
+		<br>
+		<br>
+		<p>Time to configure booze. Put the stuff in the boxes.</p>
+
+		<form class="form-horizontal" action="" method="POST">
+		  <div class="form-group">
+		    <label for="username" class="col-sm-5 control-label">Username</label>
+		    <div class="col-sm-4">
+		      <input type="text" class="form-control" id="username" name="username" {% if formdata.username.value %}value="{{formdata.username.value}}"{% endif %}>
+		      {% if formdata.username.error %}<span class="text-danger small">{{formdata.username.error}}</span>{% endif %}
+		    </div>
+		  </div>
+		  <div class="form-group">
+		    <label for="password" class="col-sm-5 control-label">Password</label>
+		    <div class="col-sm-4">
+		      <input type="password" class="form-control" id="password" name="password" {% if formdata.password.value %}value="{{formdata.password.value}}"{% endif %}>
+		      {% if formdata.password.error %}<span class="text-danger small">{{formdata.password.error}}</span>{% endif %}
+		    </div>
+		  </div>
+		  <div class="form-group">
+		    <label for="password2" class="col-sm-5 control-label">Verify Password</label>
+		    <div class="col-sm-4">
+		      <input type="password" class="form-control" id="password2" name="password2" {% if formdata.password2.value %}value="{{formdata.password2.value}}"{% endif %}>
+		    </div>
+		  </div>
+		  <div class="form-group">
+		    <label for="key" class="col-sm-5 control-label">Secret Key</label>
+		    <div class="col-sm-4">
+		      <input type="text" class="form-control" id="key" name="key" {% if formdata.key.value %}value="{{formdata.key.value}}"{% endif %}>
+		      {% if formdata.key.error %}<span class="text-danger small">{{formdata.key.error}}</span>{% endif %}
+		    </div>
+		  </div>
+		  <div class="form-group">
+		    <div class="col-sm-12">
+		      <button type="submit" class="btn btn-default">Go!</button>
+		    </div>
+		  </div>
+		</form>
+	</div>
+</div>
+{% endblock %}
