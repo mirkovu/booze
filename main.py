@@ -13,13 +13,13 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'js', 'css', 'zip'])
 
 try:
-    with open(os.path.join(root, config.json)) as x:
+    with open(os.path.join(root, 'config.json')) as x:
         config = json.loads(x.read())
-    app.config['SECRET_KEY'] = config['secret_key']
-    app.config['ADMIN_PASS'] = config['admin_pass']
-    app.config['ADMIN_USERNAME'] = config['admin_username']
-except:
-    pass
+        app.config['SECRET_KEY'] = config['secret_key']
+        app.config['ADMIN_PASS'] = config['admin_pass']
+        app.config['ADMIN_USERNAME'] = config['admin_username']
+except Exception, e:
+    print str(e)
 
 
 ''' USER AUTHENTICATION '''
