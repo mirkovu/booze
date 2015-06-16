@@ -1,4 +1,6 @@
 from flask import Flask, render_template, request, abort, redirect, session, Response
+
+from flask.ext.httpauth import HTTPDigestAuth
 import os
 import json
 import zipfile
@@ -16,40 +18,47 @@ try:
     with open(os.path.join(root, 'config.json')) as x:
         config = json.loads(x.read())
         app.config['SECRET_KEY'] = config['secret_key']
-        app.config['ADMIN_PASS'] = config['admin_pass']
-        app.config['ADMIN_USERNAME'] = config['admin_username']
+        users = {config['admin_username']: config['admin_pass']}
 except Exception, e:
-    print str(e)
+    app.config['SECRET_KEY'] = '0000000000'
+    users = {}
 
 
 ''' USER AUTHENTICATION '''
 
+auth = HTTPDigestAuth()
 
-def check_auth(username, password):
-    """This function is called to check if a username /
-    password combination is valid.
-    """
-    if 'ADMIN_USERNAME' not in app.config or 'ADMIN_PASS' not in app.config:
-        return False
-    return username == app.config['ADMIN_USERNAME'] and password == app.config['ADMIN_PASS']
+@auth.get_password
+def get_pw(username):
+    if username in users:
+        return users.get(username)
+    return None
+
+# def check_auth(username, password):
+#     """This function is called to check if a username /
+#     password combination is valid.
+#     """
+#     if 'ADMIN_USERNAME' not in app.config or 'ADMIN_PASS' not in app.config:
+#         return False
+#     return username == app.config['ADMIN_USERNAME'] and password == app.config['ADMIN_PASS']
 
 
-def authenticate():
-    """Sends a 401 response that enables basic auth"""
-    return Response(
-        'Could not verify your access level for that URL.\n'
-        'You have to login with proper credentials', 401,
-        {'WWW-Authenticate': 'Basic realm="Login Required"'})
+# def authenticate():
+#     """Sends a 401 response that enables basic auth"""
+#     return Response(
+#         'Could not verify your access level for that URL.\n'
+#         'You have to login with proper credentials', 401,
+#         {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
 
-def requires_auth(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        auth = request.authorization
-        if not auth or not check_auth(auth.username, auth.password):
-            return authenticate()
-        return f(*args, **kwargs)
-    return decorated
+# def auth.login_required(f):
+#     @wraps(f)
+#     def decorated(*args, **kwargs):
+#         auth = request.authorization
+#         if not auth or not check_auth(auth.username, auth.password):
+#             return authenticate()
+#         return f(*args, **kwargs)
+#     return decorated
 
 
 ''' FILE UPLOADS '''
@@ -132,9 +141,9 @@ def configure():
                 x.write(json.dumps(configuration))
             app.config.update(
                 SECRET_KEY=formdata['key']['value'],
-                ADMIN_USERNAME=formdata['username']['value'],
-                ADMIN_PASS=formdata['password']['value']
             )
+            global users
+            users = {formdata['username']['value']: formdata['password']['value']}
             return redirect('/admin')
 
     return render_template('admin/config.html', formdata=formdata)
@@ -142,7 +151,7 @@ def configure():
 
 
 @app.route('/admin/upload', methods=['POST'])
-@requires_auth
+@auth.login_required
 def upload_file():
     if request.method == 'POST':
         uploadpath = request.form['uploadpath']
@@ -162,11 +171,8 @@ def upload_file():
 
 
 @app.route('/admin')
-@requires_auth
+@auth.login_required
 def admin():
-    session['user'] = request.authorization.username
-    print session
-
     # Get all current pages
     systempages = [('Base Template', 'base.html'), ('Homepage', 'home.html'), ('Skeleton', 'skeleton.html'), ('404 Page', '404.html'), ('500 Page', '500.html')]
     pages = dircrawl('templates/custom/pages')
@@ -175,7 +181,7 @@ def admin():
 
 
 @app.route('/admin/<scope>/<function>/<path:page>', methods=['GET', 'POST'])
-@requires_auth
+@auth.login_required
 def adminfunction(scope, function, page):
     if scope == "page":
         base = 'templates/custom/'
@@ -228,7 +234,7 @@ def adminfunction(scope, function, page):
 
 
 @app.route('/logout')
-@requires_auth
+@auth.login_required
 def logout():
     return Response('Successfully logged out', 401)
 
@@ -239,7 +245,7 @@ def page_not_found(e):
 
 
 @app.route('/preview')
-@requires_auth
+@auth.login_required
 def preview():
     return render_template('custom/temp.html')
 
