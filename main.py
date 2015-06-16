@@ -17,7 +17,7 @@ ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'js', 'css'
 try:
     with open(os.path.join(root, 'config.json')) as x:
         config = json.loads(x.read())
-        app.config['SECRET_KEY'] = config['secret_key']
+        app.config['SECRET_KEY'] = str(config['secret_key'])
         users = {config['admin_username']: config['admin_pass']}
 except Exception, e:
     app.config['SECRET_KEY'] = '0000000000'
@@ -114,7 +114,8 @@ def dircrawl(directory, rootdir=None):
 @app.route('/admin/config', methods=['GET', 'POST'])
 def configure():
     # Don't come here if we've configured already
-    if 'ADMIN_USERNAME' in app.config and 'ADMIN_PASS' in app.config:
+    global users
+    if len(users) > 0:
         return redirect('/admin')
     formdata = {'key': {'value': None, 'error': None},
                 'username': {'value': None, 'error': None},
@@ -140,9 +141,9 @@ def configure():
             with open(os.path.join(root, 'config.json'), 'w') as x:
                 x.write(json.dumps(configuration))
             app.config.update(
-                SECRET_KEY=formdata['key']['value'],
+                SECRET_KEY=str(formdata['key']['value']),
             )
-            global users
+            
             users = {formdata['username']['value']: formdata['password']['value']}
             return redirect('/admin')
 
@@ -254,7 +255,7 @@ def preview():
 @app.route('/<path:page>')
 def gotopage(page=None):
     if page is None:
-        if 'ADMIN_USERNAME' not in app.config or 'ADMIN_PASS' not in app.config:
+        if len(users) == 0:
             # Show configuration page
             return redirect('/admin/config')
         return render_template('custom/home.html', page="home.html")
