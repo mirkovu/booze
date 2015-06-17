@@ -1,3 +1,5 @@
 env/
 *.pyc
 config.json
+static/custom/
+templates/custom
