@@ -1,12 +1,10 @@
-from flask import Flask, render_template, request, abort, redirect, session, Response
-
+from flask import Flask, render_template, request, abort, redirect, Response
 from flask.ext.httpauth import HTTPDigestAuth
 import os
 import json
 import zipfile
+import shutil
 from werkzeug import secure_filename
-from functools import wraps
-
 
 app = Flask(__name__)
 root = os.path.dirname(os.path.abspath(__file__))
@@ -143,8 +141,10 @@ def configure():
             app.config.update(
                 SECRET_KEY=str(formdata['key']['value']),
             )
-            
             users = {formdata['username']['value']: formdata['password']['value']}
+            # Copy default documents to required places
+            shutil.copytree(os.path.join(root, 'defaults/static'), os.path.join(root, 'static/custom'))
+            shutil.copytree(os.path.join(root, 'defaults/templates'), os.path.join(root, 'templates/custom'))
             return redirect('/admin')
 
     return render_template('admin/config.html', formdata=formdata)

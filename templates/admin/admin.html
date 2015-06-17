@@ -5,7 +5,13 @@
 		<img src="/static/admin/img/icon.png" height="30px"><span class="topbartext"> Admin Panel</span>
 	</div>
 	<div class="container">
-		<br>
+		<div class="col-xs-12" style="margin-bottom:20px;">
+			<div class="btn-group btn-group-justified" role="group">
+				<a class="btn btn-default" href="/">Go to Homepage</a>
+				<a class="btn btn-default" href="/">Change Password</a>
+				<a class="btn btn-default" href="/logout">Log Out</a>
+			</div>
+		</div>
 		<div class="col-xs-12">
 			<div class="panel panel-default">
 			  <div class="panel-heading">System Pages</div>
@@ -13,10 +19,7 @@
 			  	<ul class="filelist">
 			    {%- for page in systempages -%}
 			      <li>
-			      	<a href='/admin/page/edit/{{ page.1 }}'>{{ page.0 }}</a>
-			      	{% if loop.index > 5 %}
-			      		<a href='/admin/page/delete/{{ page.1 }}'>delete</a>
-			      	{% endif %}
+			      	{{ page.0 }} <a class="btn btn-default btn-xs" href='/admin/page/edit/{{ page.1 }}'>edit</a>
 			      </li>
 			    {% endfor %}
 			    </ul>
@@ -33,11 +36,11 @@
 			  	<ul class="filelist">
 					{%- for page in pages.children recursive %}
 					    <li {% if page.children %} class="liconnect"{% endif %}>
-					    {%- if page.children -%}
 					    		{{ page.name }}
+					    {%- if page.children -%}
 					        <ul class="filelist">{{ loop(page.children) }}</ul>
 					    {% else %}
-					    		<a href='/admin/page/edit/pages/{{ page.path }}'>{{ page.name }}</a> <a href='/admin/page/delete/pages/{{ page.path }}'>delete</a>
+					    		<a class="btn btn-default btn-xs" href='/admin/page/edit/pages/{{ page.path }}'>edit</a> <a class="btn btn-default btn-xs" href='/admin/page/delete/pages/{{ page.path }}'>delete</a>
 					    {%- endif %}</li>
 					{%- endfor %}
 					</ul>
@@ -55,17 +58,16 @@
 					<ul class="filelist">
 					{%- for page in staticfiles.children recursive %}
 						    <li {% if page.children %} class="liconnect"{% endif %}>
+						    {{ page.name }}
 						    {%- if page.children -%}
-						    		{{ page.name }}
 						        <ul class="filelist">{{ loop(page.children) }}</ul>
 						    {% else %}
 						    		{% if page.name.endswith(".css") or page.name.endswith(".js") or page.name.endswith(".txt") %}
-						    			<a href='/admin/static/edit/{{ page.path }}'>{{ page.name }}</a>
-						    		{% else %}
-						    			{{ page.name }}
+						    			<a class="btn btn-default btn-xs" href='/admin/static/edit/{{ page.path }}'>edit</a>
 						    		{% endif %}
-						    		&nbsp;<a href='/admin/static/delete/{{ page.path }}'>delete</a>
+						    		<a class="btn btn-default btn-xs" href='/admin/static/delete/{{ page.path }}'>delete</a>
 						    {%- endif %}</li>
+
 						{%- endfor %}
 					</ul>
 			  </div>
