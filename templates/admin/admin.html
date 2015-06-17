@@ -8,7 +8,7 @@
 		<div class="col-xs-12" style="margin-bottom:20px;">
 			<div class="btn-group btn-group-justified" role="group">
 				<a class="btn btn-default" href="/">Go to Homepage</a>
-				<a class="btn btn-default" href="/">Change Password</a>
+				<a class="btn btn-default disabled" href="/">Change Password</a>
 				<a class="btn btn-default" href="/logout">Log Out</a>
 			</div>
 		</div>
@@ -77,6 +77,22 @@
 			  		<input name="uploadfile" class="form-control input-sm" type="file">
 			  		<button type="submit" class="btn btn-default btn-sm" id="upload">Upload</button>
 			  	</form>
+			  </div>
+			</div>
+		</div>
+		<div class="col-xs-12">
+			<div class="panel panel-default">
+			  <div class="panel-heading">Import / Export</div>
+			  <div class="panel-body">
+			  	<a class="btn btn-default btn-sm" href="/admin/export">Export site to zip file</a>
+			  	<br>
+			  	<br>
+			  	<form action="/admin/import" class="form-inline" method="post" enctype="multipart/form-data">
+			  		<input name="import" class="form-control input-sm" type="file">
+			  		<button type="submit" class="btn btn-danger btn-sm" id="upload">Import Site</button>
+			  		<span class="small text-danger"><strong>WARNING</strong>Importing will overwrite your <em>entire site</em></span>
+			  	</form>
+			  
 			  </div>
 			</div>
 		</div>

@@ -1,9 +1,10 @@
-from flask import Flask, render_template, request, abort, redirect, Response
+from flask import Flask, render_template, request, abort, redirect, Response, stream_with_context
 from flask.ext.httpauth import HTTPDigestAuth
 import os
 import json
 import zipfile
 import shutil
+import zipstream
 from werkzeug import secure_filename
 
 app = Flask(__name__)
@@ -67,21 +68,30 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
+# def unzip(zipFilePath, destDir, target=''):
+#     zfile = zipfile.ZipFile(zipFilePath)
+#     for name in zfile.namelist():
+#         if name.startswith(target):
+#             newname = name.replace(target, '', 1)
+#             (dirName, fileName) = os.path.split(name)
+#             if fileName == '':
+#                 # directory
+#                 newDir = destDir + '/' + dirName
+#                 if not os.path.exists(newDir):
+#                     os.mkdir(newDir)
+#             else:
+#                 # file
+#                 try:
+#                     fd = open(destDir + '/' + name, 'wb')
+#                 fd.write(zfile.read(name))
+#                 fd.close()
+#     zfile.close()
 def unzip(zipFilePath, destDir):
-    zfile = zipfile.ZipFile(zipFilePath)
-    for name in zfile.namelist():
-        (dirName, fileName) = os.path.split(name)
-        if fileName == '':
-            # directory
-            newDir = destDir + '/' + dirName
-            if not os.path.exists(newDir):
-                os.mkdir(newDir)
-        else:
-            # file
-            fd = open(destDir + '/' + name, 'wb')
-            fd.write(zfile.read(name))
-            fd.close()
-    zfile.close()
+    z = zipfile.ZipFile(zipFilePath)
+    for name in z.namelist():
+        z.extract(name, destDir)
+    z.close()
+
 
 ''' Directory Crawler '''
 
@@ -169,6 +179,46 @@ def upload_file():
                 os.remove(filepath)
             return redirect('/admin')
     abort(500)
+
+
+@app.route('/admin/export')
+@auth.login_required
+def exporter():
+    paths = [os.path.join(root, 'static', 'custom'),
+             os.path.join(root, 'templates', 'custom')
+             ]
+    arcs = ['static', 'templates']
+
+    return Response(stream_with_context(zipstream.ZipStream(paths, arcs)),
+                    mimetype='application/zip',
+                    headers={'Content-Disposition': 'attachment;filename=booze_export.zip'})
+
+
+@app.route('/admin/import', methods=['POST'])
+@auth.login_required
+def importer():
+    file = request.files['import']
+    if zipfile.is_zipfile(file):
+        zfile = zipfile.ZipFile(file)
+        if any(x.startswith("templates/custom") for x in zfile.namelist()) and any(x.startswith("static/custom") for x in zfile.namelist()):
+            print zfile.namelist()
+            zfile.close()
+            # Delete Existing Stuff
+            template_path = os.path.join(root, 'templates', 'custom')
+            static_path = os.path.join(root, 'static', 'custom')
+            try:
+                shutil.rmtree(template_path)
+            except:
+                pass
+            try:
+                shutil.rmtree(static_path)
+            except:
+                pass
+            os.mkdir(template_path)
+            os.mkdir(static_path)
+            unzip(file, root)
+            return redirect('/admin')
+    return "Files were not uploaded. Please use a zip file exported from booze."
 
 
 @app.route('/admin')
